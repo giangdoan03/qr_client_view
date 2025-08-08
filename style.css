@@ -1,0 +1,79 @@
+.swiper {
+    width: 100%;
+}
+
+.swiper-slide img {
+    object-fit: cover;
+    max-height: 100%;
+    width: 100%;
+}
+
+.text-align-left {
+    text-align: left;
+}
+
+.text-desc p span {
+    background-color: transparent !important;
+}
+
+/* Dot pagination dạng dài */
+.swiper-pagination-bullet {
+    width: 24px;
+    height: 6px;
+    border-radius: 999px;
+    background-color: #d1d5db; /* gray-300 */
+    opacity: 1;
+    margin: 6px 4px !important;
+    transition: all 0.3s ease;
+}
+
+/* Dot active */
+.swiper-pagination-bullet-active {
+    background-color: #22c55e !important; /* green-500 */
+    width: 36px;
+}
+
+.swiper-pagination {
+    display: flex !important;
+    justify-content: center;
+    align-items: center;
+    margin-top: 12px;
+}
+
+
+.swiper.mySwiperNew,
+.swiper.mySwiperTop,
+.relatedProductsSwiper,
+.mySwiper,
+.swiper-selected-products,
+.relatedCompaniesSwiper,
+.swiper-selected-products_company
+{
+    width: 100%;
+    padding-bottom: 32px;
+}
+
+.mySwiperNew .swiper-slide,
+.mySwiperTop .swiper-slide,
+.mySwiper .swiper-slide,
+.swiper-selected-products .swiper-slide,
+.relatedCompaniesSwiper .swiper-slide,
+.swiper-selected-products_company .swiper-slide
+{
+    /*width: auto !important;*/
+    flex-shrink: 0;
+}
+
+.mySwiperNew .swiper-pagination,
+.mySwiperTop .swiper-pagination,
+.mySwiper .swiper-pagination,
+.swiper-selected-products .swiper-pagination,
+.relatedCompaniesSwiper .swiper-pagination,
+.swiper-selected-products_company .swiper-pagination
+{
+    display: flex !important;
+    justify-content: center;
+    margin-top: 12px;
+}
+
+

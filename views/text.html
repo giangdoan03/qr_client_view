@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Nội dung QR Text</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/handlebars@latest/dist/handlebars.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+
+    <style>
+        body { background: #111; color: #fff; padding: 2rem; font-family: sans-serif; }
+    </style>
+</head>
+<body>
+
+<h2 class="text-xl font-bold mb-4">📄 Nội dung văn bản từ QR</h2>
+
+<div id="output" class="space-y-4">Đang tải...</div>
+
+<!-- ✅ Handlebars template -->
+<script id="text-template" type="text/x-handlebars-template">
+    <div class="relative bg-[#222] p-4 pt-10 rounded-md">
+        <pre class="whitespace-pre-wrap break-words text-sm" id="qr-text">{{data}}</pre>
+
+        <button
+                onclick="copyTextToClipboard('{{jsEscape data}}')"
+                class="absolute top-2 right-2 bg-gray-700 text-white px-3 py-1 rounded hover:bg-green-600 transition text-sm flex items-center gap-2"
+                title="Sao chép"
+        >
+            <i class="fa fa-copy"></i> Copy
+        </button>
+
+        <div id="copy-status" class="text-green-400 text-xs mt-2 hidden">✅ Đã sao chép vào clipboard!</div>
+    </div>
+</script>
+
+<script src="./js/api.js"></script>
+
+<script>
+    // Escape string to safely inject into onclick attribute
+    Handlebars.registerHelper('jsEscape', function (text) {
+        return (text || '').replace(/'/g, "\\'").replace(/\\n/g, '\\n');
+    });
+
+    function copyTextToClipboard(text) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(() => {
+                document.getElementById('copy-status').classList.remove('hidden');
+                setTimeout(() => {
+                    document.getElementById('copy-status').classList.add('hidden');
+                }, 2000);
+            }).catch(() => {
+                alert('Không thể sao chép.');
+            });
+        } else {
+            // Fallback for old browsers
+            const textarea = document.createElement("textarea");
+            textarea.value = text;
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand("copy");
+                document.getElementById('copy-status').classList.remove('hidden');
+                setTimeout(() => {
+                    document.getElementById('copy-status').classList.add('hidden');
+                }, 2000);
+            } catch {
+                alert("Trình duyệt không hỗ trợ sao chép.");
+            }
+            document.body.removeChild(textarea);
+        }
+    }
+
+    async function loadTextQR() {
+        const qrId = new URLSearchParams(window.location.search).keys().next().value || '';
+        const output = document.getElementById("output");
+
+        try {
+            const json = await callApi(`/qr-codes/detail/${qrId}`);
+            if (!json.qr || !json.target) {
+                output.innerHTML = `<p class="text-red-400">Không tìm thấy mã QR.</p>`;
+                return;
+            }
+
+            const settings = JSON.parse(json.qr.settings_json || '{}');
+            const text = settings.data || '(Không có nội dung)';
+
+            const tplSource = document.getElementById('text-template').innerHTML;
+            const template = Handlebars.compile(tplSource);
+            output.innerHTML = template({ data: text });
+
+        } catch (err) {
+            output.innerHTML = `<p class="text-red-400">Lỗi kết nối đến API</p>`;
+        }
+    }
+
+    loadTextQR();
+</script>
+
+</body>
+</html>

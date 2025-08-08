@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Thông tin doanh nghiệp</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/handlebars@latest/dist/handlebars.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="./js/api.js"></script>
+    <script src="./js/template-common.js"></script>
+</head>
+<body class="bg-gray-900 text-gray-800">
+<div id="output" class="max-w-md mx-auto bg-white shadow-lg flex flex-col"></div>
+
+<script id="business-template" type="text/x-handlebars-template">
+    {{#with business}}
+        <div class="p-4 text-center bg-[#f5f5f5]">
+            <div class="relative">
+                <img src="{{safeImage cover_image}}" alt="cover" class="w-full h-40 object-cover rounded-lg mb-4" onerror="this.src='https://placehold.co/600x200'" />
+                <img src="{{safeImage logo}}" alt="logo" class="w-20 h-20 rounded-full border-4 border-white shadow -mt-10 mx-auto bg-white object-cover" onerror="this.src='https://placehold.co/100x100'" />
+            </div>
+
+            <h1 class="text-xl font-bold mt-2">{{name}}</h1>
+            {{#if description}}<p class="text-sm text-gray-600 mt-1">{{description}}</p>{{/if}}
+
+            <div class="mt-4 bg-white p-4 rounded-lg shadow text-left space-y-3 text-sm">
+                {{#if phone}}<p class="flex items-center gap-2"><i class="fas fa-phone text-gray-600"></i> {{phone}}</p>{{/if}}
+                {{#if email}}<p class="flex items-center gap-2"><i class="fas fa-envelope text-gray-600"></i> {{email}}</p>{{/if}}
+                {{#if tax_code}}<p class="flex items-center gap-2"><i class="fas fa-receipt text-gray-600"></i> {{tax_code}}</p>{{/if}}
+                {{#if website}}
+                    <p class="flex items-center gap-2">
+                        <i class="fas fa-globe text-gray-600"></i>
+                        <a href="{{website}}" target="_blank" class="text-blue-600 underline">{{website}}</a>
+                    </p>
+                {{/if}}
+            </div>
+
+            {{#if images.length}}
+                <div class="mt-6 text-left">
+                    <p class="font-semibold text-base mb-2">Photos</p>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                        {{#each images}}
+                            <img src="{{this}}" alt="photo" class="rounded shadow object-cover h-32 w-full" />
+                        {{/each}}
+                    </div>
+                </div>
+            {{/if}}
+
+            {{#if selectedProducts.length}}
+                <div class="mt-6 text-left">
+                    <p class="font-semibold text-base mb-2">Products</p>
+                    <div class="swiper swiper-selected-products_company">
+                        <div class="swiper-wrapper">
+                            {{#each selectedProducts}}
+                                <div class="swiper-slide w-auto">
+                                    <div class="bg-white rounded shadow text-left p-3 w-48">
+                                        <img src="{{this.avatar.url}}" class="h-24 object-contain w-full mb-2 rounded border"
+                                             alt="{{this.name}}" onerror="this.src='https://placehold.co/120x120'" />
+                                        <h3 class="text-sm font-semibold truncate">{{this.name}}</h3>
+                                        <p class="text-sm font-medium text-green-600">{{formatPrice this.price}}</p>
+                                    </div>
+                                </div>
+                            {{/each}}
+                        </div>
+                        <div class="swiper-pagination mt-2"></div>
+                    </div>
+                </div>
+            {{/if}}
+
+            {{#if selectedStores.length}}
+                <div class="mt-6 text-left">
+                    <p class="font-semibold text-base mb-2">Stores</p>
+                    {{#each selectedStores}}
+                        <div class="bg-white rounded shadow p-3 mb-3 flex items-center gap-3">
+                            <img src="{{safeImage logo}}" class="w-12 h-12 object-cover rounded border"
+                                 onerror="this.src='https://placehold.co/80'" />
+                            <div>
+                                <p class="font-bold">{{name}}</p>
+                                <p class="text-xs text-gray-600">{{address}}</p>
+                            </div>
+                        </div>
+                    {{/each}}
+                </div>
+            {{/if}}
+
+            {{#if selectedCompanies.length}}
+                <div class="mt-6 text-left">
+                    <p class="font-semibold text-base mb-2">Related Businesses</p>
+                    <div class="grid grid-cols-2 gap-4">
+                        {{#each selectedCompanies}}
+                            <div class="bg-white rounded shadow p-3">
+                                <img src="{{safeImage logo}}" class="h-12 w-12 object-contain mb-2 rounded"
+                                     onerror="this.src='https://placehold.co/100x100'" />
+                                <p class="font-bold">{{name}}</p>
+                                <p class="text-xs text-gray-600">{{phone}}</p>
+                            </div>
+                        {{/each}}
+                    </div>
+                </div>
+            {{/if}}
+
+            <div class="mt-6 text-center text-xs text-gray-400">
+                Powered by <span class="font-semibold text-green-600">Goldenwin</span>
+            </div>
+        </div>
+    {{/with}}
+</script>
+
+<script>
+    const qrId = new URLSearchParams(window.location.search).keys().next().value || '';
+    const output = document.getElementById("output");
+
+    Handlebars.registerHelper("formatPrice", function (value) {
+        const p = parseFloat(value || 0);
+        return isNaN(p) ? '' : `${p.toLocaleString("vi-VN")} ₫`;
+    });
+
+    Handlebars.registerHelper("safeImage", function (val) {
+        try {
+            const parsed = typeof val === 'string' ? JSON.parse(val) : val;
+            return Array.isArray(parsed) ? parsed[0] : parsed?.url || parsed || '';
+        } catch {
+            return val;
+        }
+    });
+
+    async function loadBusinessQR() {
+        try {
+            const json = await callApi(`/qr-codes/detail/${qrId}`);
+
+            if (!json.qr || !json.target || json.qr.target_type !== 'business') {
+                output.innerHTML = `<p class="text-center text-red-600 mt-10">Không tìm thấy doanh nghiệp hoặc QR không hợp lệ.</p>`;
+                return;
+            }
+
+            const tplSource = document.getElementById('business-template').innerHTML;
+            const template = Handlebars.compile(tplSource);
+
+            output.innerHTML = template({ business: json.target });
+
+            // Gửi log tracking QR
+            setTimeout(() => sendScanLog({ qr: json.qr, target: json.target }), 500);
+
+            // Swiper
+            new Swiper('.swiper-selected-products_company', {
+                pagination: { el: '.swiper-pagination' },
+                slidesPerView: 'auto',
+                spaceBetween: 16
+            });
+        } catch (err) {
+            console.error(err);
+            output.innerHTML = `<p class="text-center text-red-600 mt-10">Lỗi khi tải dữ liệu doanh nghiệp.</p>`;
+        }
+    }
+
+    loadBusinessQR();
+</script>
+</body>
+</html>
