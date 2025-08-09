@@ -3,38 +3,56 @@ name: Deploy info.goldenwin.vn
 on:
   push:
     branches: [ main ]
+  workflow_dispatch: {}
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
-      # Tạo file .env.production trước khi build
 
-      - name: Upload static files to VPS
+      # Kiểm tra workspace có file gì
+      - name: List workspace
+        run: |
+          pwd
+          ls -la
+
+      # Đóng gói toàn bộ site (loại .git/.github)
+      - name: Pack site
+        run: |
+          tar -czf site.tgz \
+            --exclude='.git' \
+            --exclude='.github' \
+            .
+
+      - name: Check archive
+        run: tar -tzf site.tgz | head -n 20
+
+      # Upload đúng 1 file
+      - name: Upload archive
         uses: appleboy/scp-action@v0.1.7
         with:
           host: 31.97.188.40
           username: goldenwin-info
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: |
-            ./*
-            !.git/**
-            !.github/**
-          target: "/home/goldenwin-info/htdocs/info.goldenwin.vn"
-          strip_components: 0
-          overwrite: true
+          source: "site.tgz"
+          target: "/home/goldenwin-info"
 
-      - name: Fix permissions
+      # Giải nén + set quyền
+      - name: Extract & set permissions
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: 31.97.188.40
           username: goldenwin-info
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd /home/goldenwin-info/htdocs/info.goldenwin.vn
-            find . -type d -exec chmod 755 {} \;
-            find . -type f -exec chmod 644 {} \;
+            set -e
+            TARGET=/home/goldenwin-info/htdocs/info.goldenwin.vn
+            mkdir -p "$TARGET"
+            rm -rf "$TARGET"/*
+            tar -xzf /home/goldenwin-info/site.tgz -C "$TARGET"
+            rm -f /home/goldenwin-info/site.tgz
+            find "$TARGET" -type d -exec chmod 755 {} \;
+            find "$TARGET" -type f -exec chmod 644 {} \;
             echo "==== AFTER ===="
-            ls -la
+            ls -la "$TARGET"
