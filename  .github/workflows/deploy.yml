@@ -1,11 +1,8 @@
-name: Deploy info.goldenwin.vn (static)
+name: Deploy info.goldenwin.vn
 
 on:
   push:
     branches: [ main ]
-    paths:
-      - '**'
-  workflow_dispatch: {}   # Cho phép bấm Run workflow
 
 jobs:
   deploy:
@@ -14,52 +11,38 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # 0) Test SSH: xác nhận kết nối OK và in thư mục đích hiện tại
-      - name: Test SSH connectivity
-        uses: appleboy/ssh-action@v1.0.0
-        with:
-          host: ${{ secrets.SSH_HOST_INFO }}
-          username: ${{ secrets.SSH_USER_INFO }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            whoami
-            echo "==== BEFORE ===="
-            ls -la /home/goldenwin-info/htdocs/info.goldenwin.vn || true
+      # Debug để kiểm tra thư mục
+      - name: Debug tree
+        run: |
+          pwd
+          ls -la
 
-      # 1) Dọn thư mục đích
-      - name: Prepare target dir
-        uses: appleboy/ssh-action@v1.0.0
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
-          host: ${{ secrets.SSH_HOST_INFO }}
-          username: ${{ secrets.SSH_USER_INFO }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            mkdir -p /home/goldenwin-info/htdocs/info.goldenwin.vn
-            rm -rf /home/goldenwin-info/htdocs/info.goldenwin.vn/*
+          node-version: 20
+          cache: npm
+          cache-dependency-path: package-lock.json
 
-      # 2) Upload toàn bộ file tĩnh (không đưa .git/.github)
-      - name: Upload static files to VPS
+      # Tạo file .env.production trước khi build
+
+      - name: Upload dist to VPS
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ secrets.SSH_HOST_INFO }}
-          username: ${{ secrets.SSH_USER_INFO }}
+          host: 31.97.188.40
+          username: goldenwin-info
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: |
-            ./*
-            !.git/**
-            !.github/**
+          source: "dist/*"
           target: "/home/goldenwin-info/htdocs/info.goldenwin.vn"
-          strip_components: 0
+          strip_components: 1
           overwrite: true
-          dotfiles: true
 
-      # 3) Set quyền & in ra sau upload
-      - name: Fix permissions & list
+      - name: Fix permissions
         uses: appleboy/ssh-action@v1.0.0
         with:
-          host: ${{ secrets.SSH_HOST_INFO }}
-          username: ${{ secrets.SSH_USER_INFO }}
-          key: ${{ secrets.SSH_PRIVATE_KEY_INFO }}
+          host: 31.97.188.40
+          username: goldenwin-info
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd /home/goldenwin-info/htdocs/info.goldenwin.vn
             find . -type d -exec chmod 755 {} \;

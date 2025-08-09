@@ -1,7 +1,7 @@
 const isLocal = ['localhost', '127.0.0.1', 'info.goldenwin.vn', 'qrcode.goldenwin.vn'].includes(location.hostname);
 const API_BASE = isLocal
     ? 'http://api.goldenwin.vn/api'
-    : 'https://api-qrcode.labit365.com/api';
+    : 'http://api.goldenwin.vn/api';
 
 /**
  * Gọi API GET với đường dẫn tương đối (relative)
