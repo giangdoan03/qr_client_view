@@ -3,7 +3,7 @@ name: Deploy info.goldenwin.vn
 on:
   push:
     branches: [ main ]
-  workflow_dispatch: {}
+  workflow_dispatch: {}   # có nút Run workflow
 
 jobs:
   deploy:
@@ -11,48 +11,28 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Kiểm tra workspace có file gì
-      - name: List workspace
-        run: |
-          pwd
-          ls -la
-
-      # Đóng gói toàn bộ site (loại .git/.github)
-      - name: Pack site
-        run: |
-          tar --warning=no-file-changed -czf site.tgz \
-            --exclude='.git' \
-            --exclude='.github' \
-            .
-
-      - name: Check archive
-        run: tar -tzf site.tgz | head -n 20
-
-      # Upload đúng 1 file
-      - name: Upload archive
+      # Upload TẤT CẢ file ở root repo lên thẳng webroot
+      - name: Upload to VPS
         uses: appleboy/scp-action@v0.1.7
         with:
           host: 31.97.188.40
           username: goldenwin-info
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "site.tgz"
-          target: "/home/goldenwin-info"
+          source: "."                          # đơn giản: copy toàn bộ
+          target: "/home/goldenwin-info/htdocs/info.goldenwin.vn"
+          strip_components: 0
+          overwrite: true
+          dotfiles: true                       # copy cả .htaccess
 
-      # Giải nén + set quyền
-      - name: Extract & set permissions
+      # Dọn rác CI & set quyền đọc cho Nginx
+      - name: Clean & fix perms
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: 31.97.188.40
           username: goldenwin-info
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            set -e
-            TARGET=/home/goldenwin-info/htdocs/info.goldenwin.vn
-            mkdir -p "$TARGET"
-            rm -rf "$TARGET"/*
-            tar -xzf /home/goldenwin-info/site.tgz -C "$TARGET"
-            rm -f /home/goldenwin-info/site.tgz
-            find "$TARGET" -type d -exec chmod 755 {} \;
-            find "$TARGET" -type f -exec chmod 644 {} \;
-            echo "==== AFTER ===="
-            ls -la "$TARGET"
+            rm -rf /home/goldenwin-info/htdocs/info.goldenwin.vn/.git \
+                   /home/goldenwin-info/htdocs/info.goldenwin.vn/.github || true
+            find /home/goldenwin-info/htdocs/info.goldenwin.vn -type d -exec chmod 755 {} \;
+            find /home/goldenwin-info/htdocs/info.goldenwin.vn -type f -exec chmod 644 {} \;
