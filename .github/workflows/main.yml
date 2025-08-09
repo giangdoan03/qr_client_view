@@ -20,7 +20,7 @@ jobs:
       # Đóng gói toàn bộ site (loại .git/.github)
       - name: Pack site
         run: |
-          tar -czf site.tgz \
+          tar --warning=no-file-changed -czf site.tgz \
             --exclude='.git' \
             --exclude='.github' \
             .
