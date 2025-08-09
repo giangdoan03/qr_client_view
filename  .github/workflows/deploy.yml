@@ -4,17 +4,14 @@ on:
   push:
     branches: [ main ]
     paths:
-      - 'qr_client_view/**'
-      - '.github/workflows/deploy-info.yml'
+      - '**'                                  # theo dõi mọi thay đổi (hoặc liệt kê cụ thể nếu muốn)
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
 
-      # đảm bảo thư mục đích tồn tại & sạch trước khi upload
       - name: Prepare target dir
         uses: appleboy/ssh-action@v1.0.0
         with:
@@ -25,20 +22,27 @@ jobs:
             mkdir -p /home/goldenwin-info/htdocs/info.goldenwin.vn
             rm -rf /home/goldenwin-info/htdocs/info.goldenwin.vn/*
 
-      # upload toàn bộ nội dung (kèm .htaccess)
       - name: Upload static files to VPS
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SSH_HOST_INFO }}
           username: ${{ secrets.SSH_USER_INFO }}
           key: ${{ secrets.SSH_PRIVATE_KEY_INFO }}
-          source: "qr_client_view/**"
+          source: "./**"                       # lấy toàn bộ nội dung repo
           target: "/home/goldenwin-info/htdocs/info.goldenwin.vn"
-          strip_components: 1
+          strip_components: 0
           overwrite: true
           dotfiles: true
 
-      # set permission để Nginx đọc được
+      - name: Remove CI folder (optional)
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SSH_HOST_INFO }}
+          username: ${{ secrets.SSH_USER_INFO }}
+          key: ${{ secrets.SSH_PRIVATE_KEY_INFO }}
+          script: |
+            rm -rf /home/goldenwin-info/htdocs/info.goldenwin.vn/.github
+
       - name: Fix permissions (dirs 755, files 644)
         uses: appleboy/ssh-action@v1.0.0
         with:

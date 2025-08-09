@@ -113,7 +113,7 @@ async function sendScanLog({ qr, target }) {
             customer: 'Khách hàng #id_' + qr.user_id,
         };
 
-        const res = await fetch('http://api.goldenwin.local/api/scan-history', {
+        const res = await fetch('http://api.goldenwin.vn/api/scan-history', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload),
