@@ -20,7 +20,7 @@ jobs:
         with:
           host: ${{ secrets.SSH_HOST_INFO }}
           username: ${{ secrets.SSH_USER_INFO }}
-          key: ${{ secrets.SSH_PRIVATE_KEY_INFO }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             whoami
             echo "==== BEFORE ===="
@@ -32,7 +32,7 @@ jobs:
         with:
           host: ${{ secrets.SSH_HOST_INFO }}
           username: ${{ secrets.SSH_USER_INFO }}
-          key: ${{ secrets.SSH_PRIVATE_KEY_INFO }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             mkdir -p /home/goldenwin-info/htdocs/info.goldenwin.vn
             rm -rf /home/goldenwin-info/htdocs/info.goldenwin.vn/*
@@ -43,7 +43,7 @@ jobs:
         with:
           host: ${{ secrets.SSH_HOST_INFO }}
           username: ${{ secrets.SSH_USER_INFO }}
-          key: ${{ secrets.SSH_PRIVATE_KEY_INFO }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
           source: |
             ./*
             !.git/**
