@@ -4,14 +4,29 @@ on:
   push:
     branches: [ main ]
     paths:
-      - '**'                                  # theo dõi mọi thay đổi (hoặc liệt kê cụ thể nếu muốn)
+      - '**'
+  workflow_dispatch: {}   # Cho phép bấm Run workflow
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
 
+      # 0) Test SSH: xác nhận kết nối OK và in thư mục đích hiện tại
+      - name: Test SSH connectivity
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SSH_HOST_INFO }}
+          username: ${{ secrets.SSH_USER_INFO }}
+          key: ${{ secrets.SSH_PRIVATE_KEY_INFO }}
+          script: |
+            whoami
+            echo "==== BEFORE ===="
+            ls -la /home/goldenwin-info/htdocs/info.goldenwin.vn || true
+
+      # 1) Dọn thư mục đích
       - name: Prepare target dir
         uses: appleboy/ssh-action@v1.0.0
         with:
@@ -22,28 +37,24 @@ jobs:
             mkdir -p /home/goldenwin-info/htdocs/info.goldenwin.vn
             rm -rf /home/goldenwin-info/htdocs/info.goldenwin.vn/*
 
+      # 2) Upload toàn bộ file tĩnh (không đưa .git/.github)
       - name: Upload static files to VPS
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SSH_HOST_INFO }}
           username: ${{ secrets.SSH_USER_INFO }}
           key: ${{ secrets.SSH_PRIVATE_KEY_INFO }}
-          source: "./**"                       # lấy toàn bộ nội dung repo
+          source: |
+            ./*
+            !.git/**
+            !.github/**
           target: "/home/goldenwin-info/htdocs/info.goldenwin.vn"
           strip_components: 0
           overwrite: true
           dotfiles: true
 
-      - name: Remove CI folder (optional)
-        uses: appleboy/ssh-action@v1.0.0
-        with:
-          host: ${{ secrets.SSH_HOST_INFO }}
-          username: ${{ secrets.SSH_USER_INFO }}
-          key: ${{ secrets.SSH_PRIVATE_KEY_INFO }}
-          script: |
-            rm -rf /home/goldenwin-info/htdocs/info.goldenwin.vn/.github
-
-      - name: Fix permissions (dirs 755, files 644)
+      # 3) Set quyền & in ra sau upload
+      - name: Fix permissions & list
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.SSH_HOST_INFO }}
@@ -53,3 +64,5 @@ jobs:
             cd /home/goldenwin-info/htdocs/info.goldenwin.vn
             find . -type d -exec chmod 755 {} \;
             find . -type f -exec chmod 644 {} \;
+            echo "==== AFTER ===="
+            ls -la
