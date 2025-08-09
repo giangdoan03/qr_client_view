@@ -10,31 +10,20 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-
-      # Debug để kiểm tra thư mục
-      - name: Debug tree
-        run: |
-          pwd
-          ls -la
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-          cache-dependency-path: package-lock.json
-
       # Tạo file .env.production trước khi build
 
-      - name: Upload dist to VPS
+      - name: Upload static files to VPS
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: 31.97.188.40
-          username: goldenwin-info
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "dist/*"
+          host: ${{ secrets.SSH_HOST_INFO }}
+          username: ${{ secrets.SSH_USER_INFO }}
+          key: ${{ secrets.SSH_PRIVATE_KEY_INFO }}
+          source: |
+            ./*
+            !.git/**
+            !.github/**
           target: "/home/goldenwin-info/htdocs/info.goldenwin.vn"
-          strip_components: 1
+          strip_components: 0
           overwrite: true
 
       - name: Fix permissions
