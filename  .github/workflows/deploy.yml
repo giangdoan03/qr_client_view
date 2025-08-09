@@ -1,0 +1,36 @@
+name: Deploy info.goldenwin.vn (static)
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'qr_client_view/**'
+      - '.github/workflows/deploy.yml'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Upload static files to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST_INFO }}
+          username: ${{ secrets.SSH_USER_INFO }}
+          key: ${{ secrets.SSH_PRIVATE_KEY_INFO }}
+          source: "qr_client_view/*"   # <-- Đúng thư mục trên GitHub
+          target: "/home/goldenwin-info/htdocs/info.goldenwin.vn"
+          strip_components: 1
+          overwrite: true
+
+      - name: Fix permissions (dirs 755, files 644)
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SSH_HOST_INFO }}
+          username: ${{ secrets.SSH_USER_INFO }}
+          key: ${{ secrets.SSH_PRIVATE_KEY_INFO }}
+          script: |
+            cd /home/goldenwin-info/htdocs/info.goldenwin.vn
+            find . -type d -exec chmod 755 {} \;
+            find . -type f -exec chmod 644 {} \;
