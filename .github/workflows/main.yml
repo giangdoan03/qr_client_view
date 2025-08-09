@@ -22,7 +22,6 @@ jobs:
           target: "/home/goldenwin-info/htdocs/info.goldenwin.vn"
           strip_components: 0
           overwrite: true
-          dotfiles: true                       # copy cả .htaccess
 
       # Dọn rác CI & set quyền đọc cho Nginx
       - name: Clean & fix perms
