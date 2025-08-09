@@ -15,9 +15,9 @@ jobs:
       - name: Upload static files to VPS
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ secrets.SSH_HOST_INFO }}
-          username: ${{ secrets.SSH_USER_INFO }}
-          key: ${{ secrets.SSH_PRIVATE_KEY_INFO }}
+          host: 31.97.188.40
+          username: goldenwin-info
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
           source: |
             ./*
             !.git/**
