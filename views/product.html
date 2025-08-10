@@ -77,6 +77,46 @@
                     <i class="fas fa-phone text-gray-600 mr-1"></i>{{contact_phone}}
                 </p>
                 {{/if}}
+
+                <!-- Chứng chỉ -->
+                {{#if certificate_file.length}}
+                    <div class="mt-4">
+                        <p class="text-sm text-gray-600">
+                            <i class="fas fa-certificate text-yellow-600 mr-1"></i>Chứng chỉ
+                        </p>
+
+                        <div class="mt-2 grid grid-cols-3 gap-2">
+                            {{#each certificate_file}}
+                                {{#if (isPdf this)}}
+                                    <a href="{{this}}" target="_blank" rel="noopener"
+                                       class="pdf-thumb block border rounded overflow-hidden aspect-[4/3] bg-gray-50
+                    flex items-center justify-center relative">
+                                        <i class="fa-solid fa-file-pdf text-red-600 text-4xl"></i>
+                                        <span class="absolute bottom-1 right-1 text-[10px] bg-white/80 px-1.5 rounded">PDF</span>
+                                    </a>
+
+                                {{else if (isImage this)}}
+                                    <a href="{{this}}" target="_blank" rel="noopener"
+                                       class="block border rounded overflow-hidden">
+                                        <img src="{{this}}" alt="Certificate {{@index}}"
+                                             class="w-full h-20 object-cover" loading="lazy"/>
+                                    </a>
+
+                                {{else}}
+                                    <a href="{{this}}" target="_blank" rel="noopener"
+                                       class="block border rounded overflow-hidden aspect-[4/3] bg-gray-50
+                    flex items-center justify-center relative">
+                                        <i class="fa-solid fa-file text-gray-600 text-3xl"></i>
+                                        <span class="absolute bottom-1 right-1 text-[10px] bg-white/80 px-1.5 rounded">
+                                            {{ext this}}
+                                        </span>
+                                    </a>
+                                {{/if}}
+                            {{/each}}
+                        </div>
+                    </div>
+                {{/if}}
+
             </div>
 
 
@@ -166,10 +206,31 @@
         </div>
         <!-- Footer buttons -->
         <div class="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 px-4 py-3 flex justify-center gap-4 z-50">
-            <a href="https://shopee.vn" target="_blank"
-               class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-2 rounded-md shadow transition-all duration-200 flex items-center gap-2">
-                <i class="fas fa-cart-shopping"></i> Đặt hàng
-            </a>
+            {{!-- Nút Đặt hàng: 1 link → a; nhiều link → dropdown --}}
+            {{#if display_settings.productLinks.length}}
+                <div class="relative">
+                    {{#if (eq display_settings.productLinks.length 1)}}
+                        <a href="{{display_settings.productLinks.[0].url}}" target="_blank" rel="noopener"
+                           class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-2 rounded-md shadow transition-all duration-200 flex items-center gap-2">
+                            <i class="fas fa-cart-shopping"></i> Đặt hàng
+                        </a>
+                    {{else}}
+                        <button id="order-btn-{{id}}" class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-2 rounded-md shadow transition-all duration-200 flex items-center gap-2">
+                            <i class="fas fa-cart-shopping"></i> Đặt hàng
+                            <i class="fa-solid fa-chevron-down text-xs ml-1"></i>
+                        </button>
+
+                        <div id="order-menu-{{id}}" class="hidden absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-64 max-h-72 overflow-auto bg-white border border-gray-200 rounded-md shadow-lg z-[60]">
+                            {{#each display_settings.productLinks}}
+                                <a href="{{url}}" target="_blank" rel="noopener"
+                                   class="block px-3 py-2 hover:bg-gray-50 text-gray-700 truncate">
+                                    {{#if platform}}{{platform}}{{else}}Link {{inc @index}}{{/if}}
+                                </a>
+                            {{/each}}
+                        </div>
+                    {{/if}}
+                </div>
+            {{/if}}
 
             {{#if contact_phone}}
                 <a href="tel:{{contact_phone}}"
@@ -178,6 +239,7 @@
                 </a>
             {{/if}}
         </div>
+
         <div class="h-24"></div>
     {{/with}}
 </script>
@@ -219,6 +281,7 @@
                 qr_type: json.qr.qr_type,
                 contact_phone: json.target.contact_phone,
                 avatar: json.target.avatar?.[0] || null,
+                certificate_file: json.target.certificate_file
             };
 
             // Render ra HTML bằng Handlebars
@@ -254,12 +317,39 @@
             initSwiper('.relatedCompaniesSwiper');
             initSwiper('.relatedStoresSwiper');
 
+            initAllOrderDropdowns();
+
         } catch (err) {
             console.error(err);
             output.innerHTML = `<p class="text-center text-red-600 mt-10">Lỗi khi tải dữ liệu sản phẩm.</p>`;
         }
     }
 
+    function initOrderDropdown(productId) {
+        const btn  = document.getElementById(`order-btn-${productId}`);
+        const menu = document.getElementById(`order-menu-${productId}`);
+        if (!btn || !menu) return;
+
+        const toggle = (e) => {
+            e.preventDefault();
+            menu.classList.toggle('hidden');
+        };
+        const onDocClick = (e) => {
+            if (!btn.contains(e.target) && !menu.contains(e.target)) {
+                menu.classList.add('hidden');
+            }
+        };
+
+        btn.addEventListener('click', toggle);
+        document.addEventListener('click', onDocClick);
+    }
+
+    function initAllOrderDropdowns() {
+        document.querySelectorAll('[id^="order-btn-"]').forEach((btn) => {
+            const pid = btn.id.replace('order-btn-', '');
+            initOrderDropdown(pid);
+        });
+    }
 
     loadProductQR();
 </script>

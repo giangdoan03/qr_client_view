@@ -26,6 +26,17 @@ Handlebars.registerHelper("safeImage", function(val) {
     }
 });
 
+Handlebars.registerHelper('isPdf', url => /\.pdf([?#].*)?$/i.test(url || ''));
+Handlebars.registerHelper('isImage', url => /\.(png|jpe?g|gif|webp|bmp|svg)([?#].*)?$/i.test(url || ''));
+Handlebars.registerHelper('ext', url => {
+    const u = (url || '').split('#')[0].split('?')[0];
+    const m = u.match(/\.([a-z0-9]+)$/i);
+    return m ? m[1].toUpperCase() : 'FILE';
+});
+
+Handlebars.registerHelper('eq', (a, b) => a === b);
+Handlebars.registerHelper('inc', i => Number(i) + 1);
+
 
 // Detect Hệ điều hành
 function detectOS() {
