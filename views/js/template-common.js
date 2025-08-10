@@ -113,11 +113,21 @@ async function sendScanLog({ qr, target }) {
             customer: 'Khách hàng #id_' + qr.user_id,
         };
 
-        const res = await fetch('http://api.goldenwin.vn/api/scan-history', {
+        // chọn origin theo hostname hiện tại
+        const host = location.hostname.toLowerCase();
+        const isLocal = host === 'localhost' || host === '127.0.0.1' || host.endsWith('.local');
+        const apiOrigin = isLocal ? `${location.protocol}//api.goldenwin.local` : 'https://api.goldenwin.vn';
+
+        const res = await fetch(`${apiOrigin}/api/scan-history`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+            },
+            // credentials: 'include', // bật nếu API dùng cookie/session
             body: JSON.stringify(payload),
         });
+
 
         const result = await res.json();
         console.log('Scan logged:', result);
