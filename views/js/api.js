@@ -1,14 +1,12 @@
-const isLocal = ['localhost', '127.0.0.1', 'info.goldenwin.vn', 'qrcode.goldenwin.vn'].includes(location.hostname);
-const API_BASE = isLocal
-    ? 'http://api.goldenwin.vn/api'
-    : 'http://api.goldenwin.vn/api';
+// api.js
+const host = location.hostname;
+const isLocal = (host === 'localhost' || host === '127.0.0.1' || host.endsWith('.local'));
 
-/**
- * Gọi API GET với đường dẫn tương đối (relative)
- * @param {string} endpoint - Ví dụ: /qr-codes/detail/abc123
- * @returns {Promise<any>} - Trả về JSON hoặc ném lỗi
- */
-async function callApi(endpoint) {
+export const API_BASE = isLocal
+    ? 'https://api.goldenwin.vn/api'
+    : 'https://api.goldenwin.vn/api';
+
+export async function callApi(endpoint) {
     try {
         const res = await fetch(`${API_BASE}${endpoint}`, {
             method: 'GET',
