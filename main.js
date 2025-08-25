@@ -98,12 +98,9 @@ async function renderQRPage() {
         return;
     }
 
-    const isLocal =
-        ['localhost', '127.0.0.1', 'info.goldenwin.local', 'qrcode.goldenwin.local'].includes(window.location.hostname);
+    const isLocal = ['localhost', '127.0.0.1', 'info.goldenwin.local', 'qrcode.goldenwin.local'].includes(window.location.hostname);
 
-    const API_BASE = isLocal
-        ? 'http://api.goldenwin.local/api'
-        : 'https://api-qrcode.labit365.com/api';
+    const API_BASE = isLocal ? 'http://api.goldenwin.local/api' : 'https://api-qrcode.labit365.com/api';
 
     console.log('API_BASE', API_BASE)
 
@@ -120,9 +117,7 @@ async function renderQRPage() {
 
         // 👉 Làm sạch dữ liệu event nếu là sự kiện
 
-        const images = Array.isArray(target.images)
-            ? target.images.map(img => typeof img === 'string' ? img : img?.url)
-            : [];
+        const images = Array.isArray(target.images) ? target.images.map(img => typeof img === 'string' ? img : img?.url) : [];
 
         // Lấy template phù hợp
         let templateId;

@@ -258,16 +258,32 @@
 
         try {
             const json = await callApi(`/qr-codes/detail/${qrId}`);
-
             console.log('json', json)
 
-            // Kiểm tra dữ liệu hợp lệ
             if (!json.qr || !json.target || json.qr.target_type !== 'product') {
                 output.innerHTML = `<p class="text-center text-red-600 mt-10">Không tìm thấy sản phẩm hoặc QR không hợp lệ.</p>`;
                 return;
             }
 
-            // Chuẩn bị dữ liệu render template
+            // 👉 Kiểm tra status
+            if (json.target.status === "0") {
+                output.innerHTML = `
+        <div class="min-h-screen flex items-center justify-center bg-gray-50">
+            <div class="text-center p-6 rounded-lg">
+                <i class="fa-solid fa-clock text-6xl mb-4 text-orange-500"></i>
+                <p class="text-xl font-semibold text-gray-700">
+                    Sản phẩm đang chờ quản trị viên duyệt
+                </p>
+                <p class="text-sm text-gray-500 mt-2">
+                    Vui lòng quay lại sau khi được phê duyệt.
+                </p>
+            </div>
+        </div>`;
+                return;
+            }
+
+
+            // Nếu status != 0 thì render template như cũ
             const productData = {
                 product: json.target,
                 price: json.target.price,
@@ -284,46 +300,45 @@
                 certificate_file: json.target.certificate_file
             };
 
-            // Render ra HTML bằng Handlebars
             const tplSource = document.getElementById('product-template').innerHTML;
             const template = Handlebars.compile(tplSource);
             output.innerHTML = template(productData);
 
-            // Gửi log scan sau 500ms
-            setTimeout(() => sendScanLog({ qr: json.qr, target: json.target }), 500);
-
-
-            // Khởi tạo các Swiper sau khi render
-            const initSwiper = (selector) => {
-                const el = document.querySelector(selector);
-                if (el) {
-                    new Swiper(selector, {
-                        slidesPerView: 1, // 👉 chỉ hiển thị 1 item
-                        spaceBetween: 12, // 👉 thêm dòng này để tạo khoảng cách giữa các slide
-                        pagination: {
-                            el: selector + ' .swiper-pagination',
-                        },
-                        // Có thể thêm navigation nếu muốn:
-                        navigation: {
-                            nextEl: selector + ' .swiper-button-next',
-                            prevEl: selector + ' .swiper-button-prev',
-                        },
-                    });
-                }
-            };
-
+            // init Swipers + dropdown
             initSwiper('.imageProductAvatarSwiper');
             initSwiper('.relatedProductsSwiper');
             initSwiper('.relatedCompaniesSwiper');
             initSwiper('.relatedStoresSwiper');
-
             initAllOrderDropdowns();
+
+            // log scan
+            setTimeout(() => sendScanLog({ qr: json.qr, target: json.target }), 500);
 
         } catch (err) {
             console.error(err);
             output.innerHTML = `<p class="text-center text-red-600 mt-10">Lỗi khi tải dữ liệu sản phẩm.</p>`;
         }
     }
+
+    // Đặt ngoài loadProductQR
+    function initSwiper(selector) {
+        const el = document.querySelector(selector);
+        if (el) {
+            new Swiper(selector, {
+                slidesPerView: 1,
+                spaceBetween: 12,
+                pagination: {
+                    el: selector + ' .swiper-pagination',
+                    clickable: true,
+                },
+                navigation: {
+                    nextEl: selector + ' .swiper-button-next',
+                    prevEl: selector + ' .swiper-button-prev',
+                },
+            });
+        }
+    }
+
 
     function initOrderDropdown(productId) {
         const btn  = document.getElementById(`order-btn-${productId}`);
